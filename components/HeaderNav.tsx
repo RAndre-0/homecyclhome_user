@@ -29,11 +29,12 @@ const navLinks = [
 ]
 
 export default function HeaderNav() {
+  const TOKEN_NAME = process.env.NEXT_PUBLIC_TOKEN_NAME || 'hch_token';
   const [menuOpen, setMenuOpen] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   useEffect(() => {
-    const token = getCookie('token')
+    const token = getCookie(TOKEN_NAME) as string | undefined;
     setIsAuthenticated(!!token)
   }, [])
 

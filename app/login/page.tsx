@@ -29,10 +29,11 @@ import { GalleryVerticalEnd } from "lucide-react";
 import { apiService } from "@/services/api-service";
 
 export default function LoginPage() {
-  const [loading, setLoading] = useState(false)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [cookies, setCookie] = useCookies(["token"])
-  const router = useRouter()
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const TOKEN_NAME = process.env.NEXT_PUBLIC_TOKEN_NAME ?? 'hch_token';
+  const [cookies, setCookie] = useCookies([TOKEN_NAME]);
+  const router = useRouter();
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -60,9 +61,9 @@ export default function LoginPage() {
       const token = data?.token
       if (!token) throw new Error("Le token n'a pas été renvoyé.")
 
-      setCookie("token", token, {
+      setCookie(TOKEN_NAME, token, {
         path: "/",
-        maxAge: 60 * 60, // 1h
+        maxAge: 3600, // 1h
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
       })

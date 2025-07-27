@@ -21,7 +21,8 @@ export const apiService = async (
     };
 
     if (auth) {
-      const token = getCookie('token') as string | undefined;
+      const TOKEN_NAME = process.env.NEXT_PUBLIC_TOKEN_NAME ?? 'hch_token';
+      const token = getCookie(TOKEN_NAME) as string | undefined;
       if (!token) throw new Error("Token is missing from cookies");
       headers['Authorization'] = `Bearer ${token}`;
     }

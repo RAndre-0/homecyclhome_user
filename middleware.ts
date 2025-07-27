@@ -6,7 +6,11 @@ import jwt, { JwtPayload } from 'jsonwebtoken';
 const PROTECTED_ROUTES = ['/profile'];
 
 export function middleware(request: NextRequest) {
-  const token = request.cookies.get('token')?.value;
+  const TOKEN_NAME = process.env.NEXT_PUBLIC_TOKEN_NAME;
+  if (!TOKEN_NAME) {
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
+  const token = request.cookies.get(TOKEN_NAME)?.value;
   const pathname = request.nextUrl.pathname;
 
   if (!PROTECTED_ROUTES.includes(pathname)) {
