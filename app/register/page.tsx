@@ -24,7 +24,7 @@ import { PhoneInput } from '@/components/PhoneInput'
 
 export default function RegisterPage() {
   const router = useRouter()
-  const [cookies, setCookie] = useCookies(['token'])
+  const [, setCookie] = useCookies(['token'])
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 

@@ -5,18 +5,33 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { fetchAddressCoordinates } from '@/services/banService';
 import { apiService } from '@/services/api-service';
+import { BANFeature } from '@/types/types'
+
+type ZoneCheckResponse = {
+  covered: boolean;
+};
 
 export default function AvailabilityCheck() {
   const [query, setQuery] = useState('');
-  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [suggestions, setSuggestions] = useState<BANFeature[]>([]);
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const fetchSuggestions = async (text: string) => {
-    if (text.length < 3) return;
-    const res = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(text)}&limit=5`);
-    const data = await res.json();
-    setSuggestions(data.features);
+    if (text.trim().length < 3) {
+      setSuggestions([]);
+      return;
+    }
+    try {
+      const res = await fetch(
+        `https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(text)}&limit=5`
+      );
+      const data = await res.json();
+      const feats: BANFeature[] = Array.isArray(data?.features) ? data.features : [];
+      setSuggestions(feats);
+    } catch {
+      setSuggestions([]);
+    }
   };
 
   const handleSelect = (label: string) => {
@@ -30,23 +45,25 @@ export default function AvailabilityCheck() {
     setMessage('');
 
     try {
-      // Vérification de la validité de l'adresse auprès de l'API BAN
+      // Vérification de la validité de l’adresse auprès de l’API BAN
       const { lat, lon, label } = await fetchAddressCoordinates(query);
 
-      // Appel vers l'API pour vérifier si la coordonnée est bien couverte
-      const result = await apiService('zones/check', 'POST', {
-        latitude: lat,
-        longitude: lon
-      }, false);
+      // Appel vers l’API pour vérifier si la coordonnée est bien couverte
+      const result = await apiService(
+        'zones/check',
+        'POST',
+        { latitude: lat, longitude: lon },
+        false
+      ) as ZoneCheckResponse;
 
       if (result.covered) {
         setMessage(`✅ Nous desservons votre adresse (${label}).`);
       } else {
-        setMessage(`❌ Désolé, cette adresse n'est pas encore desservie.`);
+        setMessage('❌ Désolé, cette adresse n’est pas encore desservie.');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      setMessage("❌ Adresse invalide ou erreur lors de la vérification.");
+      setMessage('❌ Adresse invalide ou erreur lors de la vérification.');
     } finally {
       setIsLoading(false);
     }
@@ -66,13 +83,14 @@ export default function AvailabilityCheck() {
               placeholder="Entrez votre adresse"
               value={query}
               onChange={(e) => {
-                setQuery(e.target.value);
-                fetchSuggestions(e.target.value);
+                const val = e.target.value;
+                setQuery(val);
+                fetchSuggestions(val);
               }}
               className="mb-2"
             />
 
-            {Array.isArray(suggestions) && suggestions.length > 0 && (
+            {suggestions.length > 0 && (
               <ul className="absolute z-10 w-full bg-white border rounded shadow max-h-48 overflow-auto">
                 {suggestions.map((s) => (
                   <li
@@ -92,7 +110,7 @@ export default function AvailabilityCheck() {
             onClick={handleVerify}
             disabled={isLoading}
           >
-            {isLoading ? "Vérification..." : "Vérifier"}
+            {isLoading ? 'Vérification...' : 'Vérifier'}
           </Button>
 
           {message && (
@@ -100,7 +118,7 @@ export default function AvailabilityCheck() {
           )}
 
           <p className="text-center text-sm text-gray-500 mt-3">
-            Nous intervenons actuellement dans la majeur partie de la zone urbaine lyonnaise.
+            Nous intervenons actuellement dans la majeure partie de la zone urbaine lyonnaise.
           </p>
         </div>
       </div>

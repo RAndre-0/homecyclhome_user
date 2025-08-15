@@ -5,7 +5,7 @@ import { useCookies } from 'react-cookie';
 
 export default function Logout() {
   const TOKEN_NAME = process.env.NEXT_PUBLIC_TOKEN_NAME ?? 'hch_token';
-  const [cookies, setCookie, removeCookie] = useCookies([TOKEN_NAME]); // Accès aux cookies
+  const [, removeCookie] = useCookies([TOKEN_NAME]); // Accès aux cookies
   const router = useRouter(); // Pour la redirection
 
   useEffect(() => {
@@ -13,7 +13,7 @@ export default function Logout() {
     removeCookie(TOKEN_NAME, { path: '/' });
     // Redirection vers la page de login, pas de router.push pour recharger la navbar
     window.location.href = "/login";
-  }, [removeCookie, router]);
+  }, [removeCookie, router, TOKEN_NAME]);
 
   return (
     <div className="flex min-h-screen items-center justify-center">

@@ -1,4 +1,4 @@
-import { CheckCircle, Clock, Home, Award } from 'lucide-react';
+import { Clock, Home, Award } from 'lucide-react';
 
 export default function WhyChooseUs() {
   return (

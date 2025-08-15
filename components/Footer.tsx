@@ -7,7 +7,7 @@ export default function Footer() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
         <div>
           <h3 className="text-xl font-bold mb-4">HomeCyclHome</h3>
-          <p className="text-gray-400">Service de réparation et d'entretien de vélos à domicile.</p>
+          <p className="text-gray-400">Service de réparation et d&apos;entretien de vélos à domicile.</p>
         </div>
 
         <div>
@@ -33,7 +33,7 @@ export default function Footer() {
           <h4 className="text-lg font-semibold mb-4">Légal</h4>
           <ul className="space-y-2 text-gray-400">
             <li><Link href="#">Politique de confidentialité</Link></li>
-            <li><Link href="#">Conditions d'utilisation</Link></li>
+            <li><Link href="#">Conditions d&apos;utilisation</Link></li>
           </ul>
         </div>
       </div>

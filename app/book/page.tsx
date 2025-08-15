@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { getCookie } from 'cookies-next';
 import { useRouter } from 'next/navigation';
 import { jwtDecode } from 'jwt-decode';
@@ -10,22 +10,22 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
-interface DecodedToken {
-  id: number;
-  exp: number;
-}
+import { DecodedToken, BANFeature, TypeIntervention, Slot } from '@/types/types';
 
 export default function BookPage() {
   const router = useRouter();
+
+  const TOKEN_NAME = process.env.NEXT_PUBLIC_TOKEN_NAME || 'hch_token';
+  const API = process.env.NEXT_PUBLIC_API_ROUTE ?? '';
+
   const [userId, setUserId] = useState<number | null>(null);
   const [query, setQuery] = useState('');
-  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [suggestions, setSuggestions] = useState<BANFeature[]>([]);
   const [message, setMessage] = useState('');
-  const [slots, setSlots] = useState<any[]>([]);
+  const [slots, setSlots] = useState<Slot[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedSlotId, setSelectedSlotId] = useState<number | null>(null);
-  const [types, setTypes] = useState<any[]>([]);
+  const [types, setTypes] = useState<TypeIntervention[]>([]);
   const [selectedTypeId, setSelectedTypeId] = useState<number | null>(null);
   const [photo, setPhoto] = useState<File | null>(null);
   const [bikeBrand, setBikeBrand] = useState('');
@@ -34,29 +34,42 @@ export default function BookPage() {
   const [comment, setComment] = useState('');
 
   useEffect(() => {
-    const TOKEN_NAME = process.env.NEXT_PUBLIC_TOKEN_NAME || 'hch_token';
-    const token = getCookie(TOKEN_NAME) as string | undefined;
-    if (!token) return;
-    try {
-      const decoded = jwtDecode<DecodedToken>(token);
-      setUserId(decoded.id);
-    } catch {
-      setUserId(null);
+    const token = getCookie(TOKEN_NAME);
+    if (typeof token === 'string' && token.length > 0) {
+      try {
+        const decoded = jwtDecode<DecodedToken>(token);
+        setUserId(decoded.id ?? null);
+      } catch {
+        setUserId(null);
+      }
     }
 
     (async () => {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_ROUTE}types-intervention`);
-      const data = await response.json();
-      setTypes(data);
+      try {
+        const response = await fetch(`${API}types-intervention`);
+        if (!response.ok) throw new Error('fetch types failed');
+        const data: TypeIntervention[] = await response.json();
+        setTypes(Array.isArray(data) ? data : []);
+      } catch {
+        setTypes([]);
+      }
     })();
-  }, []);
+  }, [API, TOKEN_NAME]);
 
   const fetchSuggestions = async (text: string) => {
-    if (text.length < 3) return;
+    if (text.trim().length < 3) {
+      setSuggestions([]);
+      return;
+    }
     try {
-      const res = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(text)}&limit=5`);
+      const res = await fetch(
+        `https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(text)}&limit=5`
+      );
       const data = await res.json();
-      setSuggestions(Array.isArray(data.features) ? data.features : []);
+      const feats: BANFeature[] = Array.isArray(data?.features)
+        ? data.features
+        : [];
+      setSuggestions(feats);
     } catch {
       setSuggestions([]);
     }
@@ -73,34 +86,46 @@ export default function BookPage() {
       setMessage('❌ Veuillez d’abord choisir un type d’intervention.');
       return;
     }
+    if (!query.trim()) {
+      setMessage('❌ Veuillez saisir une adresse.');
+      return;
+    }
 
     setLoading(true);
     setMessage('');
     setSlots([]);
+    setSelectedSlotId(null);
 
     try {
       const { lat, lon } = await fetchAddressCoordinates(query);
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_ROUTE}zones/check`, {
+      const coverRes = await fetch(`${API}zones/check`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ latitude: lat, longitude: lon })
+        body: JSON.stringify({ latitude: lat, longitude: lon }),
       });
-      const result = await res.json();
+      if (!coverRes.ok) throw new Error('zones/check failed');
+      const result: { covered: boolean; technicien_id?: number } = await coverRes.json();
 
-      if (!result.covered) {
+      if (!result.covered || !result.technicien_id) {
         setMessage('❌ Nous ne couvrons pas cette adresse.');
         return;
       }
 
       setMessage('✅ Adresse couverte. Chargement des créneaux...');
 
-      const slotResponse = await fetch(`${process.env.NEXT_PUBLIC_API_ROUTE}interventions/available/${result.technicien_id}?typeId=${selectedTypeId}`, {
-        headers: {
-          Authorization: `Bearer ${getCookie('token')}`,
-        },
-      });
-      const slotData = await slotResponse.json();
-      setSlots(slotData);
+      const token = getCookie(TOKEN_NAME);
+      const slotResponse = await fetch(
+        `${API}interventions/available/${result.technicien_id}?typeId=${selectedTypeId}`,
+        {
+          headers: typeof token === 'string' && token
+            ? { Authorization: `Bearer ${token}` }
+            : {},
+        }
+      );
+      if (!slotResponse.ok) throw new Error('fetch slots failed');
+
+      const slotData: Slot[] = await slotResponse.json();
+      setSlots(Array.isArray(slotData) ? slotData : []);
       setMessage('✅ Créneaux disponibles.');
     } catch (err) {
       console.error(err);
@@ -134,7 +159,7 @@ export default function BookPage() {
     if (!selectedSlotId || !userId) return;
 
     const formData = new FormData();
-    formData.append('clientId', userId.toString());
+    formData.append('clientId', String(userId));
     formData.append('marqueVelo', bikeBrand);
     formData.append('modeleVelo', bikeModel);
     formData.append('commentaire', comment);
@@ -143,27 +168,37 @@ export default function BookPage() {
     if (photo) formData.append('photo', photo);
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_ROUTE}interventions/${selectedSlotId}/book`, {
+      const token = getCookie(TOKEN_NAME);
+      const response = await fetch(`${API}interventions/${selectedSlotId}/book`, {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${getCookie('token')}`
-        },
-        body: formData
+        headers:
+          typeof token === 'string' && token
+            ? { Authorization: `Bearer ${token}` }
+            : {},
+        body: formData,
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(errorText);
+        throw new Error(errorText || 'booking failed');
       }
 
       alert('✅ Demande envoyée avec succès.');
       router.push('/profile');
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      alert(`❌ Erreur : ${err.message}`);
+      const msg = err instanceof Error ? err.message : 'Erreur inconnue';
+      alert(`❌ Erreur : ${msg}`);
     }
   };
 
+  const groupedSlots = useMemo(() => {
+    return slots.reduce<Record<string, Slot[]>>((acc, slot) => {
+      const date = new Date(slot.debut).toISOString().split('T')[0];
+      (acc[date] ||= []).push(slot);
+      return acc;
+    }, {});
+  }, [slots]);
 
   if (!userId) {
     return (
@@ -173,20 +208,15 @@ export default function BookPage() {
             <CardTitle>Connexion requise</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="mb-4">Vous devez être connecté pour faire une demande d’intervention à domicile.</p>
+            <p className="mb-4">
+              Vous devez être connecté pour faire une demande d’intervention à domicile.
+            </p>
             <Button onClick={() => router.push('/login')}>Se connecter</Button>
           </CardContent>
         </Card>
       </div>
     );
   }
-
-  const groupedSlots = slots.reduce((acc: Record<string, any[]>, slot: any) => {
-    const date = new Date(slot.debut).toISOString().split('T')[0];
-    if (!acc[date]) acc[date] = [];
-    acc[date].push(slot);
-    return acc;
-  }, {});
 
   return (
     <div className="max-w-xl mx-auto px-4 py-10">
@@ -200,8 +230,8 @@ export default function BookPage() {
             <SelectValue placeholder="Choisissez un type" />
           </SelectTrigger>
           <SelectContent>
-            {types.map((type: any) => (
-              <SelectItem key={type.id} value={type.id.toString()}>
+            {types.map((type) => (
+              <SelectItem key={type.id} value={String(type.id)}>
                 {type.nom} – {type.prix_depart}€
               </SelectItem>
             ))}
@@ -215,8 +245,9 @@ export default function BookPage() {
           placeholder="Entrez votre adresse"
           value={query}
           onChange={(e) => {
-            setQuery(e.target.value);
-            fetchSuggestions(e.target.value);
+            const val = e.target.value;
+            setQuery(val);
+            fetchSuggestions(val);
           }}
         />
         {suggestions.length > 0 && (
@@ -240,7 +271,7 @@ export default function BookPage() {
 
       {message && <p className="mt-4 text-sm text-center">{message}</p>}
 
-      {slots.length > 0 && (
+      {Object.keys(groupedSlots).length > 0 && (
         <div className="mt-6">
           <h2 className="text-lg font-semibold mb-4">Créneaux disponibles</h2>
           <Accordion type="single" collapsible>
@@ -267,9 +298,7 @@ export default function BookPage() {
                           <button
                             key={s.id}
                             onClick={() => setSelectedSlotId(s.id)}
-                            className={`p-2 border rounded text-sm transition-colors duration-200 ${isSelected
-                              ? 'bg-green-100 border-green-500'
-                              : 'bg-white hover:bg-gray-100'
+                            className={`p-2 border rounded text-sm transition-colors duration-200 ${isSelected ? 'bg-green-100 border-green-500' : 'bg-white hover:bg-gray-100'
                               }`}
                           >
                             {timeLabel}
@@ -282,11 +311,14 @@ export default function BookPage() {
               );
             })}
           </Accordion>
+
           {selectedSlotId && (
             <p className="mt-4 text-sm text-center text-green-600">
-              Créneau sélectionné : {new Date(slots.find((s) => s.id === selectedSlotId)?.debut).toLocaleString('fr-FR')}
+              Créneau sélectionné :{' '}
+              {new Date(slots.find((s) => s.id === selectedSlotId)?.debut ?? '').toLocaleString('fr-FR')}
             </p>
           )}
+
           {selectedSlotId && (
             <div className="mt-8 space-y-4">
               <h3 className="text-lg font-semibold">Informations sur le vélo</h3>
@@ -326,7 +358,7 @@ export default function BookPage() {
                 <textarea
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
-                  className="w-full border ... "
+                  className="w-full border rounded p-2"
                   placeholder="Ajoutez un commentaire pour le technicien si besoin..."
                   rows={4}
                 />
@@ -340,12 +372,12 @@ export default function BookPage() {
                   onChange={handleFileChange}
                 />
               </div>
+
               <Button className="w-full" onClick={handleSubmit}>
                 Envoyer la demande
               </Button>
             </div>
           )}
-
         </div>
       )}
     </div>

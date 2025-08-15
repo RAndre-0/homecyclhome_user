@@ -36,7 +36,7 @@ export default function HeaderNav() {
   useEffect(() => {
     const token = getCookie(TOKEN_NAME) as string | undefined;
     setIsAuthenticated(!!token)
-  }, [])
+  }, [TOKEN_NAME])
 
   const toggleMenu = () => setMenuOpen(prev => !prev)
 
