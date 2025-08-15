@@ -1,0 +1,22 @@
+services:
+  user:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_ROUTE: ${NEXT_PUBLIC_API_ROUTE}
+        NEXT_PUBLIC_TOKEN_NAME: ${NEXT_PUBLIC_TOKEN_NAME}
+        APP_VERSION: ${APP_VERSION:-1.0.0}
+    container_name: ${USER_CONTAINER_NAME:-homecyclhome_user}
+    # Expose uniquement en local pour que seul Caddy y accède
+    ports:
+      - "127.0.0.1:${USER_PORT:-3000}:3000"
+    # Charge les variables runtime depuis .env
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      NEXT_PUBLIC_API_ROUTE: ${NEXT_PUBLIC_API_ROUTE}
+      NEXT_PUBLIC_TOKEN_NAME: ${NEXT_PUBLIC_TOKEN_NAME}
+      NEXT_TELEMETRY_DISABLED: ${NEXT_TELEMETRY_DISABLED:-1}
+    restart: unless-stopped
