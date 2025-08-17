@@ -78,7 +78,7 @@ export default function MonProfilPage() {
       <AccordionContent>
         <Card>
           <CardContent className="p-4 space-y-2">
-            <p><strong>Vélo :</strong> {intervention.veloMarque} {intervention.veloModele} ({intervention.veloCategorie}) {intervention.veloElectrique ? '⚡' : ''}</p>
+            <p><strong>Vélo :</strong> {intervention.veloMarque} {intervention.veloModele} {intervention.veloCategorie} {intervention.veloElectrique ? '⚡' : ''}</p>
             <p><strong>Prix :</strong> {intervention.typeIntervention.prixDepart} €</p>
             <p><strong>Durée :</strong> {new Date(intervention.typeIntervention.duree).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
             <p><strong>Commentaire :</strong> {intervention.commentaireClient}</p>
