@@ -3,17 +3,19 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: 'tests',
   timeout: 30_000,
+  retries: 1,
   expect: { timeout: 5_000 },
   use: {
-    baseURL: 'http://127.0.0.1:3000',
+    baseURL: 'http://127.0.0.1:3000',   // ← URL de test
     trace: 'on-first-retry',
   },
   webServer: {
-    // Sur Windows, mieux vaut passer par npm + cross-env :
-    command: 'npx cross-env NODE_ENV=development npm run dev',
+    // Démarre Next en dev, sans certificat ni HTTPS
+    command: 'npx next dev -p 3000',
     url: 'http://127.0.0.1:3000',
     reuseExistingServer: true,
-    timeout: 180_000, // premier build Next peut être long
+    timeout: 180_000,                    // le premier build peut être un peu long
+    env: { NODE_ENV: 'development' },    // ← cookie NON secure (OK en HTTP pour les tests)
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },

@@ -8,11 +8,12 @@ export class RegisterPage {
     await expect(this.page.getByText(/création de compte/i)).toBeVisible();
   }
 
-  get firstname() { return this.page.getByLabel(/prénom/i); }
-  get lastname()  { return this.page.getByLabel(/nom/i); }
-  get email()     { return this.page.getByLabel(/email/i); }
-  get phone()     { return this.page.getByLabel(/numéro de téléphone/i); }
-  get password()  { return this.page.getByLabel(/mot de passe/i); }
+  // Option 1 : par label exact (recommandé)
+  get firstname() { return this.page.getByLabel('Prénom', { exact: true }); }
+  get lastname()  { return this.page.getByLabel('Nom', { exact: true }); }
+  get email()     { return this.page.getByLabel('Email', { exact: true }); }
+  get phone()     { return this.page.getByLabel(/Numéro de téléphone/i); }
+  get password()  { return this.page.getByLabel('Mot de passe', { exact: true }); }
   get submit()    { return this.page.getByRole('button', { name: /s'inscrire|chargement/i }); }
   get errorBox()  { return this.page.getByText(/une erreur est survenue lors de l'inscription/i); }
 
