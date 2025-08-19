@@ -44,7 +44,7 @@ test.describe('Inscription @signup', () => {
         // Attend que la navigation soit complète
         await page.waitForURL('**/', { waitUntil: 'networkidle' });
 
-        // IMPORTANT: Attendre que le cookie soit défini avec retry automatique
+        // Attendre que le cookie soit défini avec retry automatique
         await expect(async () => {
             const cookies = await context.cookies();
             const tokenCookie = cookies.find(c => c.name === 'token');

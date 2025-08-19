@@ -8,7 +8,7 @@ export class RegisterPage {
     await expect(this.page.getByText(/création de compte/i)).toBeVisible();
   }
 
-  // Option 1 : par label exact (recommandé)
+  // Récupération des champs par label
   get firstname() { return this.page.getByLabel('Prénom', { exact: true }); }
   get lastname()  { return this.page.getByLabel('Nom', { exact: true }); }
   get email()     { return this.page.getByLabel('Email', { exact: true }); }
