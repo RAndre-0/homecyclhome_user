@@ -7,7 +7,7 @@ services:
         NEXT_PUBLIC_API_ROUTE: ${NEXT_PUBLIC_API_ROUTE}
         NEXT_PUBLIC_TOKEN_NAME: ${NEXT_PUBLIC_TOKEN_NAME}
         APP_VERSION: ${APP_VERSION:-1.0.0}
-    container_name: ${ADMIN_CONTAINER_NAME:-homecyclhome_user}
+    container_name: ${USER_CONTAINER_NAME:-homecyclhome_user}
     env_file:
       - .env
     environment:
