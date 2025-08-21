@@ -22,9 +22,7 @@ import { Menu, CircleUser, X } from 'lucide-react';
 
 const navLinks = [
   { title: 'Accueil', href: '/' },
-  { title: 'Services', href: '/#services' },
   { title: 'Réserver', href: '/book' },
-  { title: 'Tarifs', href: '/#pricing' },
   { title: 'Contact', href: '/#contact' },
 ]
 
