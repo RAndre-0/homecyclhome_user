@@ -1,0 +1,39 @@
+name: Deploy USER (TEST)
+
+on:
+  push:
+    branches: [ "main" ]
+
+concurrency:
+  group: deploy-user-test
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: SSH to VPS & deploy TEST
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -e
+            cd /var/www/homecyclhome_test/homecyclhome_user
+
+            # sécurité git (ownership)
+            git config --global --add safe.directory /var/www/homecyclhome_test/homecyclhome_user
+
+            # sync code
+            git fetch origin main
+            git reset --hard origin/main
+
+            # bootstrap services (premier run)
+            DOCKER_BUILDKIT=1 docker compose -p homecyclhome_user_test build --pull
+            docker compose -p homecyclhome_user_test up -d --no-deps user
+
+            docker image prune -f || true
+            docker compose -p homecyclhome_user_test ps
+            docker compose -p homecyclhome_user_test logs --since=1m user || true

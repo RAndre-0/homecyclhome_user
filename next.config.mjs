@@ -1,5 +1,5 @@
 const nextConfig = {
-    // Configuration pour le build standalone optimisé pour Docker
+  // Configuration pour le build standalone optimisé pour Docker
   output: 'standalone',
 
   // ⬇️ MVP: ne pas casser le build à cause d'ESLint/TS
@@ -10,9 +10,15 @@ const nextConfig = {
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'api.homecyclhome.site' },
+      { protocol: 'https', hostname: 'api-test.homecyclhome.site' },
       {
         protocol: 'https',
         hostname: 'api.homecyclhome.site',
+        pathname: '/uploads/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'api-test.homecyclhome.site',
         pathname: '/uploads/**',
       },
       // localhost pour le dev
@@ -25,7 +31,7 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: '127.0.0.1',
-        port: '8000', 
+        port: '8000',
         pathname: '/uploads/**',
       },
     ],
