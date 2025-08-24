@@ -1,0 +1,50 @@
+[
+    {
+        "id": 101,
+        "velo_categorie": "VTC",
+        "velo_electrique": true,
+        "velo_marque": "Gazelle",
+        "velo_modele": "Ultimate C8",
+        "adresse": "12 Rue des Lilas, Paris",
+        "commentaire_client": "Frein avant qui frotte",
+        "photo": null,
+        "type_intervention": {
+            "nom": "Révision",
+            "duree": "1970-01-01T01:00:00.000Z",
+            "prix_depart": "59"
+        },
+        "technicien": {
+            "first_name": "Nina",
+            "last_name": "Dupont"
+        },
+        "debut": "2025-03-15T09:00:00.000Z",
+        "fin": "2025-03-15T10:00:00.000Z",
+        "client": {
+            "id": 1
+        }
+    },
+    {
+        "id": 102,
+        "velo_categorie": "Route",
+        "velo_electrique": false,
+        "velo_marque": "Specialized",
+        "velo_modele": "Allez",
+        "adresse": "5 Avenue Victor Hugo, Paris",
+        "commentaire_client": "Dérailleur à régler",
+        "photo": null,
+        "type_intervention": {
+            "nom": "Réglage transmission",
+            "duree": "1970-01-01T00:30:00.000Z",
+            "prix_depart": "39"
+        },
+        "technicien": {
+            "first_name": "Nils",
+            "last_name": "Moreau"
+        },
+        "debut": "2025-03-01T08:00:00.000Z",
+        "fin": "2025-03-01T08:30:00.000Z",
+        "client": {
+            "id": 1
+        }
+    }
+]
