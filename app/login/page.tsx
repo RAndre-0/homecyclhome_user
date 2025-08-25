@@ -29,7 +29,7 @@ import { apiService } from "@/services/api-service";
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const TOKEN_NAME = process.env.NEXT_PUBLIC_TOKEN_NAME ?? 'hch_token';
+  const TOKEN_NAME = process.env.NEXT_PUBLIC_TOKEN_NAME ?? 'hch_token_u';
   const [, setCookie] = useCookies([TOKEN_NAME]);
 
   const form = useForm<z.infer<typeof loginSchema>>({
